@@ -32,13 +32,11 @@
 		"-e", "AZ_RESOURCE_GROUP=${localEnv:AZ_RESOURCE_GROUP}"
 		//"AWS_PROFILE=${env:AWS_PROFILE}"
 	],
-	// open these ports for port-forwarding to host during demo
-	"forwardPorts": [8081,9000],
 	"extensions": [
 		"humao.rest-client",
 		"redhat.vscode-camelk",
 		"ms-dotnettools.csharp",
-		"asciidoctor.asciidoctor-vscode"
+		"asciidoctor.asciidoctor-vscode",
 		"formulahendry.dotnet-test-explorer",
         "ms-vscode.vscode-node-azure-pack",
         "ms-kubernetes-tools.vscode-kubernetes-tools",
