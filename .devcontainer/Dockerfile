@@ -1,81 +1,28 @@
+FROM quay.io/mhildenb/win-demo-base:latest
 
-#-------------------------------------------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See https://go.microsoft.com/fwlink/?linkid=2090316 for license information.
-#-------------------------------------------------------------------------------------------------------------
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1-bionic
+USER root
 
-# This Dockerfile adds a non-root user with sudo access. Use the "remoteUser"
-# property in devcontainer.json to use it. On Linux, the container user's GID/UIDs
-# will be updated to match your local UID/GID (when using the dockerFile property).
-# See https://aka.ms/vscode-remote/containers/non-root-user for details.
-ARG USERNAME=vscode
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
+# FIXME: Would rather install this from rpm, but can't get the instructions to work
+# https://github.com/kubevirt/kubevirt/releases/download/v0.33.0/virtctl-v0.33.0-linux-x86_64
+RUN KUBEVIRT_VERSION=v0.33.0 && wget -O /usr/local/bin/virtctl https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_VERSION}/virtctl-${KUBEVIRT_VERSION}-linux-amd64 && \
+    chmod +x /usr/local/bin/virtctl
 
-# [Optional] Version of Node.js to install.
-ARG INSTALL_NODE="false"
-ARG NODE_VERSION="lts/*"
-ENV NVM_DIR=/usr/local/share/nvm
+ENV PATH="$PATH:/opt/mssql-tools/bin"
 
-# [Optional] Install the Azure CLI
-ARG INSTALL_AZURE_CLI="false"
+# Use the operator-sdk to deploy the wmco
+ENV OPERATOR_SDK_VERSION=v0.18.1
+RUN curl -LO https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_VERSION}/operator-sdk-${OPERATOR_SDK_VERSION}-x86_64-linux-gnu && \
+    chmod +x operator-sdk-${OPERATOR_SDK_VERSION}-x86_64-linux-gnu && mkdir -p /usr/local/bin/ && \
+    cp operator-sdk-${OPERATOR_SDK_VERSION}-x86_64-linux-gnu /usr/local/bin/operator-sdk && rm operator-sdk-${OPERATOR_SDK_VERSION}-x86_64-linux-gnu
 
-# Configure apt and install packages
-RUN apt-get update \
-    && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends apt-utils dialog 2>&1 \
-    #
-    # Verify git, process tools, lsb-release (common in install instructions for CLIs) installed
-    && apt-get -y install git openssh-client less iproute2 procps apt-transport-https gnupg2 curl lsb-release \
-    #
-    # Create a non-root user to use if preferred - see https://aka.ms/vscode-remote/containers/non-root-user.
-    && groupadd --gid $USER_GID $USERNAME \
-    && useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $USERNAME \
-    # [Optional] Add sudo support for the non-root user
-    && apt-get install -y sudo \
-    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME\
-    && chmod 0440 /etc/sudoers.d/$USERNAME \
-    #
-    # [Optional] Install Node.js for ASP.NET Core Web Applicationss
-    && if [ "$INSTALL_NODE" = "true" ]; then \
-        #
-        # Install nvm and Node
-        mkdir -p ${NVM_DIR} \
-        && curl -so- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash 2>&1 \
-        && chown -R ${USER_UID}:${USER_GID} ${NVM_DIR} \
-        && /bin/bash -c "source $NVM_DIR/nvm.sh \
-            && nvm alias default ${NODE_VERSION}" 2>&1 \
-        && echo '[ -s "$NVM_DIR/nvm.sh" ] && \\. "$NVM_DIR/nvm.sh"  && [ -s "$NVM_DIR/bash_completion" ] && \\. "$NVM_DIR/bash_completion"' \
-        | tee -a /home/${USERNAME}/.bashrc /home/${USERNAME}/.zshrc >> /root/.zshrc \
-        && echo "if [ \"\$(stat -c '%U' ${NVM_DIR})\" != \"${USERNAME}\" ]; then sudo chown -R ${USER_UID}:root ${NVM_DIR}; fi" \
-        | tee -a /root/.bashrc /root/.zshrc /home/${USERNAME}/.bashrc >> /home/${USERNAME}/.zshrc \
-        && chown ${USER_UID}:${USER_GID} /home/${USERNAME}/.bashrc /home/${USERNAME}/.zshrc \
-        && chown -R ${USER_UID}:root ${NVM_DIR} \
-        #
-        # Install yarn
-        && curl -sS https://dl.yarnpkg.com/$(lsb_release -is | tr '[:upper:]' '[:lower:]')/pubkey.gpg | apt-key add - 2>/dev/null \
-        && echo "deb https://dl.yarnpkg.com/$(lsb_release -is | tr '[:upper:]' '[:lower:]')/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
-        && apt-get update \
-        && apt-get -y install --no-install-recommends yarn; \
-    fi \
-    #
-    # [Optional] Install the Azure CLI
-    && if [ "$INSTALL_AZURE_CLI" = "true" ]; then \
-        echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" > /etc/apt/sources.list.d/azure-cli.list \
-        && curl -sL https://packages.microsoft.com/keys/microsoft.asc | apt-key add - 2>/dev/null \
-        && apt-get update \
-        && apt-get install -y azure-cli; \
-    fi \
-    #
-    # Install EF Core dotnet tool
-    && dotnet tool install dotnet-ef --tool-path /home/$USERNAME/.dotnet/tools \
-    && chown -R $USERNAME /home/$USERNAME/.dotnet \
-    #
-    # Clean up
-    && apt-get autoremove -y \
-    && apt-get clean -y \
-    && rm -rf /var/lib/apt/lists/*
+# Add kamel functionality
+RUN wget -qO- https://github.com/apache/camel-k/releases/download/v1.2.0/camel-k-client-1.2.0-linux-64bit.tar.gz | tar -zxvf - -C /usr/local/bin ./kamel && \
+    chmod 755 /usr/local/bin/kamel
 
-# Set PATH for dotnet tools
-ENV PATH "$PATH:/home/$USERNAME/.dotnet/tools"
+# Add 
+
+USER default
+
+# # this is done in the base image already (to support the demo shell images too), but for those that make
+# # local changes to .zshrc they should not have to rebuild the base
+# COPY base-image-assets/.zshrc.example $HOME/.zshrc
