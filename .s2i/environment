@@ -1,1 +1,1 @@
-DOTNET_STARTUP_PROJECT=eShopOnWeb.sln
+DOTNET_STARTUP_PROJECT=src/Web/Web.csproj
