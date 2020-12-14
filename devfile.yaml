@@ -4,7 +4,7 @@ metadata:
 projects:
   - name: eShopOnWeb
     source:
-      location: 'https://gitea.az-demo-support.svc.cluster.local:3000/gitea/eShopOnWeb.git'
+      location: 'http://gitea.az-demo-support.svc.cluster.local:3000/gitea/eshop.git'
       type: github
       branch: feature-fmg
 components:
@@ -56,25 +56,11 @@ commands:
                     "type": "netcoredbg",
                     "request": "launch",
                     "name": ".NET Core Launch (console)",
-                    "stopAtEntry": true,
-                    "preLaunchTask": "build",
-                    "console": "internalConsole",
-                    "preLaunchTask": "build",
-                    // If you have changed target frameworks, make sure to update the program path.
-                    "program": "/projects/eShopOnWeb/src/Web/bin/Debug/netcoreapp3.1/Web.dll",
-                    "args": [],
-                    "cwd": "/projects/eShopOnWeb/src/Web",
                     "stopAtEntry": false,
-                    // Enable launching a web browser when ASP.NET Core starts. For more information: https://aka.ms/VSCode-CS-LaunchJson-WebBrowser
-                    "serverReadyAction": {
-                        "action": "openExternally",
-                        "pattern": "^\\s*Now listening on:\\s+(https?://\\S+)"
-                    },
-                    "envFile": "/home/jboss/.zshenv",
-                    "sourceFileMap": {
-                        "/Views": "projects/eShopOnWeb/Views"
-                    }
-
+                    //"preLaunchTask": "dotnet build",
+                    "console": "internalConsole",
+                    "program": "/projects/eshop/src/Web/bin/Debug/netcoreapp3.1/Web.dll",
+                    "args": []
                   }
               ]
           }
