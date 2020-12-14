@@ -30,19 +30,19 @@ components:
 commands:
   - name: 1. Update dependencies
     actions:
-      - workdir: '${CHE_PROJECTS_ROOT}/eShopOnWeb/src/Web'
+      - workdir: '${CHE_PROJECTS_ROOT}/eshop/src/Web'
         type: exec
         command: dotnet restore
         component: dotnet
   - name: 2. Build
     actions:
-      - workdir: '${CHE_PROJECTS_ROOT}/eShopOnWeb/src/Web'
+      - workdir: '${CHE_PROJECTS_ROOT}/eshop/src/Web'
         type: exec
         command: dotnet build
         component: dotnet
   - name: 3. Run
     actions:
-      - workdir: '${CHE_PROJECTS_ROOT}/eShopOnWeb/src/Web'
+      - workdir: '${CHE_PROJECTS_ROOT}/eshop/src/Web'
         type: exec
         command: dotnet run
         component: dotnet
