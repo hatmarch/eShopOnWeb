@@ -1,59 +1,66 @@
-# ASP.NET Core
-# Build and test ASP.NET Core projects targeting .NET Core.
-# Add steps that run tests, create a NuGet package, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+parameters:
+- name: manifest
+  displayName: K8 Manifest
+  type: string
+  default: ./deploy/eshopweb-manifest.yaml
 
 trigger:
-- feature-fmg
+  branches:
+    include:
+    - feature-fmg
 
-pool:
-  vmImage: 'ubuntu-18.04' # examples of other options: 'macOS-10.15', 'windows-2019'
+resources:
+  repositories:
+  - repository: self
+    type: git
+    ref: feature-fmg
 
-variables:
-  buildConfiguration: 'Debug'
-  projectPath: ""
-  kubernetesDeploymentYamlPath: kube/customer
+jobs:
+- job: Job_1
+  displayName: Build Dotnet Code and Image
+  pool:
+    vmImage: ubuntu-20.04
+  steps:
+  - checkout: self
 
+  # do this before all your .NET Core tasks
+  - task: UseDotNet@2
+    displayName: Use .NET Core sdk 3.1.x
+    enabled: False
+    inputs:
+      version: 3.1.x
+  - task: DotNetCoreCLI@2
+    displayName: dotnet build
+    enabled: False
+    inputs:
+      projects: ./src/Web/Web.csproj
 
-steps:
-# # do this before all your .NET Core tasks
-# - task: DotNetCoreInstaller@0
-#   inputs:
-#     version: '2.2.105' # replace this value with the version that you need for your project
+  - task: DockerInstaller@0
+    displayName: Install Docker 17.09.0-ce
+  - task: Docker@2
+    displayName: buildAndPush
+    inputs:
+      containerRegistry: 1e8b919a-2b7c-4f3b-bd2d-43cadf512093
+      repository: mhildenb/eshopweb
+      Dockerfile: ./src/Web/Dockerfile
+      buildContext: .
 
-- task: UseDotNet@2
-  inputs:
-    version: '3.1.x'
+  - task: oc-setup@2
+    displayName: 'oc-setup '
+    inputs:
+      openshiftService: 27f93aa4-72d3-421a-b97c-623b779e29ca
 
-#- script: dotnet restore
-#  workingDirectory: $(projectPath)
-  
-#- script: dotnet build --configuration $(buildConfiguration)
-#  displayName: 'dotnet build $(buildConfiguration)'
-#  workingDirectory: $(projectPath)
+  - task: Bash@3
+    displayName: Bash Script
+    inputs:
+      filePath: deploy/deploy.sh
+      arguments: $(Build.BuildId)
 
-# publish the binaries for release (in container)
-- script: ./pub.sh $(buildConfiguration)
-  displayName: Prepare for publishing $(buildConfiguration)
-  workingDirectory: $(projectPath)
-
-# Build the docker image
-- task: Docker@2
-  inputs:
-    containerRegistry: 'DockerHub (mhildema)'
-    repository: 'mhildema/customer-dotnet'
-    command: 'buildAndPush'
-    Dockerfile: '$(projectPath)/Dockerfile'
-    buildContext: '$(projectPath)'
-    tags: 'v$(Build.BuildId)'
-
-# Copy Deployment YAML files
-- task: CopyFiles@2
-  inputs:
-    sourceFolder: '$(kubernetesDeploymentYamlPath)'
-    contents: '**/Deployment*.yml'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)'
-- task: PublishBuildArtifacts@1
-  inputs:
-    pathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    artifactName: drop
+  - task: CopyFiles@2
+    displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
+    inputs:
+      SourceFolder: deploy
+      TargetFolder: $(build.artifactstagingdirectory)
+      
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact: drop'
