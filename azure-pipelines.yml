@@ -1,26 +1,30 @@
-variables:
-- name: k8_manifest_service_connection_id
-  value: ddc46a55-5e29-40f8-9731-f0612aeb1abc
-- name: container_registry_service_connection_id
-  value: 1e8b919a-2b7c-4f3b-bd2d-43cadf512093
-- name: openshift_service_connection_id
-  value: 27f93aa4-72d3-421a-b97c-623b779e29ca
+# These can be defined via the CLI in the create-demo script
+# if defined here they will override what we set in the CLI
+# variables:
+# - name: k8_manifest_service_connection_id
+#   value: ddc46a55-5e29-40f8-9731-f0612aeb1abc
+# - name: container_registry_service_connection_id
+#   value: 1e8b919a-2b7c-4f3b-bd2d-43cadf512093
+# - name: openshift_service_connection_id
+#   value: 27f93aa4-72d3-421a-b97c-623b779e29ca
 
 parameters:
 - name: manifest
   displayName: K8 Manifest
   type: string
   default: ./deploy/eshopweb-manifest.yaml
-  # Variable 'manifest' was defined in the Variables tab
+
 trigger:
   branches:
     include:
     - feature-fmg
+
 resources:
   repositories:
   - repository: self
     type: git
     ref: feature-fmg
+
 jobs:
 - job: Job_1
   displayName: Build Dotnet Code and Image
@@ -50,7 +54,7 @@ jobs:
       Dockerfile: ./src/Web/Dockerfile
       buildContext: .
   - task: oc-setup@2
-    displayName: 'oc-setup '
+    displayName: 'oc-setup'
     enabled: True
     inputs:
       openshiftService: $(openshift_service_connection_id)
@@ -72,5 +76,5 @@ jobs:
     inputs:
       kubernetesServiceConnection: $(k8_manifest_service_connection_id)
       namespace: az-demo-stage
-      manifests: $(manifest)
+      manifests: ${{ parameters.manifest }}
       containers: quay.io/mhildenb/eshopweb:$(Build.BuildId)
