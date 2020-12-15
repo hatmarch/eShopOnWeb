@@ -1,3 +1,11 @@
+variables:
+- name: k8_manifest_service_connection_id
+  value: ddc46a55-5e29-40f8-9731-f0612aeb1abc
+- name: container_registry_service_connection_id
+  value: 1e8b919a-2b7c-4f3b-bd2d-43cadf512093
+- name: openshift_service_connection_id
+  value: 27f93aa4-72d3-421a-b97c-623b779e29ca
+
 parameters:
 - name: manifest
   displayName: K8 Manifest
@@ -37,18 +45,18 @@ jobs:
     displayName: buildAndPush
     enabled: False
     inputs:
-      containerRegistry: 1e8b919a-2b7c-4f3b-bd2d-43cadf512093
+      containerRegistry: $(container_registry_service_connection_id)
       repository: mhildenb/eshopweb
       Dockerfile: ./src/Web/Dockerfile
       buildContext: .
   - task: oc-setup@2
     displayName: 'oc-setup '
-    enabled: False
+    enabled: True
     inputs:
-      openshiftService: 27f93aa4-72d3-421a-b97c-623b779e29ca
+      openshiftService: $(openshift_service_connection_id)
   - task: Bash@3
     displayName: Bash Script
-    enabled: False
+    enabled: True
     inputs:
       filePath: deploy/deploy.sh
       arguments: $(Build.BuildId)
@@ -62,7 +70,7 @@ jobs:
   - task: KubernetesManifest@0
     displayName: deploy
     inputs:
-      kubernetesServiceConnection: ddc46a55-5e29-40f8-9731-f0612aeb1abc
+      kubernetesServiceConnection: $(k8_manifest_service_connection_id)
       namespace: az-demo-stage
       manifests: $(manifest)
-      containers: quay.io/mhildenb/eshopweb:365
+      containers: quay.io/mhildenb/eshopweb:$(Build.BuildId)
