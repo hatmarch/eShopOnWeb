@@ -1,8 +1,8 @@
 apiVersion: 1.0.0
 metadata:
-  name: dotnet-eshop
+  name: dotnet-eShopWeb
 projects:
-  - name: eshop
+  - name: eShopWeb
     source:
       # location: 'http://gitea.az-demo-support.svc.cluster.local:3000/gitea/eshop.git'
       location: 'https://mhildenb@dev.azure.com/mhildenb/fmg-project/_git/eshop'
@@ -45,15 +45,15 @@ commands:
         component: dotnet
   - name: 2. Build
     actions:
-      - workdir: '${CHE_PROJECTS_ROOT}/eshop/src/Web'
+      - workdir: '${CHE_PROJECTS_ROOT}/eShopWeb/src/Web'
         type: exec
         command: dotnet build
         component: dotnet
   - name: 3. Run
     actions:
-      - workdir: '${CHE_PROJECTS_ROOT}/eshop/src/Web'
+      - workdir: '${CHE_PROJECTS_ROOT}/eShopWeb/src/Web'
         type: exec
-        command: dotnet run
+        command: dotnet run --launch-profile "CRW"
         component: dotnet
   - name: Launch .net web application in debug mode
     actions:
@@ -64,7 +64,7 @@ commands:
                  {
                     "type": "netcoredbg",
                     "request": "launch",
-                    "program": "/projects/eshop/src/Web/bin/Debug/netcoreapp3.1/Web.dll",
+                    "program": "/projects/eShopWeb/src/Web/bin/Debug/netcoreapp3.1/Web.dll",
                     "args": [],
                     "name": ".NET Core Launch (console)",
                     "stopAtEntry": true,
