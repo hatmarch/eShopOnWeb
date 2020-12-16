@@ -62,7 +62,7 @@ jobs:
     displayName: Bash Script
     enabled: True
     inputs:
-      filePath: deploy/deploy.sh
+      filePath: deploy/oc-command-test.sh
       arguments: $(Build.BuildId)
   - task: CopyFiles@2
     displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
