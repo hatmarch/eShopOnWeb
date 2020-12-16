@@ -4,7 +4,8 @@ metadata:
 projects:
   - name: eShopOnWeb
     source:
-      location: 'http://gitea.az-demo-support.svc.cluster.local:3000/gitea/eshop.git'
+      # location: 'http://gitea.az-demo-support.svc.cluster.local:3000/gitea/eshop.git'
+      location: 'https://mhildenb@dev.azure.com/mhildenb/fmg-project/_git/eshop.git'
       type: github
       branch: feature-fmg
 components:
