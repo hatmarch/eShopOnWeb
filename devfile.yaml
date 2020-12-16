@@ -18,16 +18,18 @@ components:
     type: chePlugin
     alias: netcoredbg
   - mountSources: true
+    automountWorkspaceSecrets: true
     endpoints:
-      - name: hello-endpoint
-        port: 5000
+      - name: website
+        port: 8080
     memoryLimit: 512Mi
     type: dockerimage
     volumes:
       - name: nuget
         containerPath: /home/jboss/.nuget
     alias: dotnet
-    image: 'quay.io/mhildenb/az-demo-crw:latest'
+    # image: 'quay.io/mhildenb/az-demo-crw:latest'
+    image: 'registry.redhat.io/codeready-workspaces/stacks-dotnet-rhel8@sha256:a61038e596c0c6104ae86cf4c5af5c60a6126feefa6e6585c540de2c48b723a2'
 commands:
   - name: 1. Update dependencies
     actions:
@@ -60,7 +62,6 @@ commands:
                     "args": [],
                     "name": ".NET Core Launch (console)",
                     "stopAtEntry": true,
-                    "preLaunchTask": "build",
                     "console": "internalConsole"
                   }
               ]
