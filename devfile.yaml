@@ -2,7 +2,7 @@ apiVersion: 1.0.0
 metadata:
   name: dotnet-eshop
 projects:
-  - name: eShopOnWeb
+  - name: eshop
     source:
       # location: 'http://gitea.az-demo-support.svc.cluster.local:3000/gitea/eshop.git'
       location: 'https://mhildenb@dev.azure.com/mhildenb/fmg-project/_git/eshop'
@@ -28,9 +28,15 @@ components:
       - name: nuget
         containerPath: /home/jboss/.nuget
     alias: dotnet
-    # image: 'quay.io/mhildenb/az-demo-crw:latest'
-    image: 'registry.redhat.io/codeready-workspaces/stacks-dotnet-rhel8@sha256:a61038e596c0c6104ae86cf4c5af5c60a6126feefa6e6585c540de2c48b723a2'
+    image: 'quay.io/mhildenb/az-demo-crw:latest'
+    # image: 'registry.redhat.io/codeready-workspaces/stacks-dotnet-rhel8@sha256:a61038e596c0c6104ae86cf4c5af5c60a6126feefa6e6585c540de2c48b723a2'
 commands:
+  - name: 0. Seed Cache
+    actions:
+      - workdir: '/home/jboss'
+        type: exec
+        command: 'cp -rf nuget-cache/* .nuget'
+        component: dotnet
   - name: 1. Update dependencies
     actions:
       - workdir: '${CHE_PROJECTS_ROOT}/eshop/src/Web'
