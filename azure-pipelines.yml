@@ -13,6 +13,10 @@ parameters:
   displayName: K8 Manifest
   type: string
   default: ./deploy/eshopweb-manifest.yaml
+- name: target-namespace
+  displayName: Target Namespace
+  type: string
+  default: az-demo-stage
 
 trigger:
   branches:
@@ -33,20 +37,20 @@ jobs:
   steps:
   - checkout: self
   - task: UseDotNet@2
-    displayName: Use .NET Core sdk 3.1.x
-    enabled: False
+    displayName: "Install .NET Core sdk 3.1.x on Agent"
+    enabled: true
     inputs:
       version: 3.1.x
   - task: DotNetCoreCLI@2
-    displayName: dotnet build
+    displayName: "Build Dotnet Artefacts (dotnet build)"
     enabled: false
     inputs:
       projects: ./src/Web/Web.csproj
   - task: DockerInstaller@0
-    displayName: Install Docker 17.09.0-ce
+    displayName: "Install Docker 17.09.0-ce"
     enabled: true
   - task: Docker@2
-    displayName: buildAndPush
+    displayName: "Build Docker Image and Push to Registry"
     enabled: true
     inputs:
       containerRegistry: $(container_registry_service_connection_id)
@@ -54,16 +58,23 @@ jobs:
       Dockerfile: ./src/Web/Dockerfile
       buildContext: .
   - task: oc-setup@2
-    displayName: 'oc-setup'
+    displayName: "Install OpenShift Client on Agent"
     enabled: True
     inputs:
       openshiftService: $(openshift_service_connection_id)
   - task: Bash@3
-    displayName: Bash Script
+    displayName: "Use oc to seed database in namespace ${{ parameters.target-namespace }}"
     enabled: True
     inputs:
-      filePath: deploy/oc-command-test.sh
-      arguments: $(Build.BuildId)
+      filePath: deploy/oc-db-seed.sh
+      arguments: ${{ parameters.target-namespace }}
+  - task: KubernetesManifest@0
+    displayName: "Deploy Manifest"
+    inputs:
+      kubernetesServiceConnection: $(k8_manifest_service_connection_id)
+      namespace: ${{ parameters.target-namespace }}
+      manifests: ${{ parameters.manifest }}
+      containers: quay.io/mhildenb/eshopweb:$(Build.BuildId)
   - task: CopyFiles@2
     displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
     inputs:
@@ -71,10 +82,3 @@ jobs:
       TargetFolder: $(build.artifactstagingdirectory)
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact: drop'
-  - task: KubernetesManifest@0
-    displayName: deploy
-    inputs:
-      kubernetesServiceConnection: $(k8_manifest_service_connection_id)
-      namespace: az-demo-stage
-      manifests: ${{ parameters.manifest }}
-      containers: quay.io/mhildenb/eshopweb:$(Build.BuildId)
