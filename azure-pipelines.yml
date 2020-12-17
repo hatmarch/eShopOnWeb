@@ -13,7 +13,7 @@ parameters:
   displayName: K8 Manifest
   type: string
   default: ./deploy/eshopweb-manifest.yaml
-- name: target-namespace
+- name: target_namespace
   displayName: Target Namespace
   type: string
   default: az-demo-stage
@@ -63,16 +63,16 @@ jobs:
     inputs:
       openshiftService: $(openshift_service_connection_id)
   - task: Bash@3
-    displayName: "Use oc to seed database in namespace ${{ parameters.target-namespace }}"
+    displayName: "Use oc to seed database in namespace ${{ parameters.target_namespace }}"
     enabled: True
     inputs:
       filePath: deploy/oc-db-seed.sh
-      arguments: ${{ parameters.target-namespace }}
+      arguments: ${{ parameters.target_namespace }}
   - task: KubernetesManifest@0
     displayName: "Deploy Manifest"
     inputs:
       kubernetesServiceConnection: $(k8_manifest_service_connection_id)
-      namespace: ${{ parameters.target-namespace }}
+      namespace: ${{ parameters.target_namespace }}
       manifests: ${{ parameters.manifest }}
       containers: quay.io/mhildenb/eshopweb:$(Build.BuildId)
   - task: CopyFiles@2
