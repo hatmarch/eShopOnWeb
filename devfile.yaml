@@ -39,7 +39,7 @@ commands:
         component: dotnet
   - name: 1. Update dependencies
     actions:
-      - workdir: '${CHE_PROJECTS_ROOT}/eshop/src/Web'
+      - workdir: '${CHE_PROJECTS_ROOT}/eShopWeb/src/Web'
         type: exec
         command: dotnet restore
         component: dotnet
